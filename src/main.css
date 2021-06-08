@@ -58,6 +58,29 @@ div.slide.titlepage h1 {
   padding: 150px 10px 50px 25px;
 }
 
+div.toolbar {
+  position: fixed; z-index: 200;
+  top: auto; bottom: 0; left: 0; right: 0;
+  height: 1.2em; text-align: right;
+  padding-left: 1em;
+  padding-right: 1em; 
+  font-size: 60%;
+  color: black;
+  background-color: rgb(240,240,240);
+  border-top: solid 1px rgb(180,180,180);
+}
+
+a:visited { color: navy }
+a:link { color: navy }
+a:hover { color: navy; text-decoration: underline }
+a:active { color: navy; text-decoration: underline }
+
+a {text-decoration: none}
+.toolbar a:link {color: blue}
+.toolbar a:visited {color: blue}
+.toolbar a:active {color: navy}
+.toolbar a:hover {color: navy}
+
 
 /* Tables */
 
