@@ -1,7 +1,7 @@
 ---
 title: Software Containers with Singularity
 author: Center for Advanced Research Computing <br> University of Southern California
-date: 2021-06-07
+date: 2021-06-08
 ---
 
 
@@ -397,6 +397,24 @@ export SINGULARITY_CACHEDIR=/scratch/<username>/.singularity
 
 ```
 export SINGULARITY_BIND=/scratch/<username>,/project/<project_id>
+```
+
+
+## Example job script
+
+```
+#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16GB
+#SBATCH --time=1:00:00
+#SBATCH --account=<account_id>
+
+module purge
+
+singularity exec julia.sif julia script.jl
 ```
 
 

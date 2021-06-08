@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Center for Advanced Research Computing   University of Southern California" />
-  <meta name="date" content="2021-06-07" />
+  <meta name="date" content="2021-06-08" />
   <title>Software Containers with Singularity</title>
   <style type="text/css">
     code{white-space: pre-wrap;}
@@ -30,7 +30,7 @@
   <p class="author">
 Center for Advanced Research Computing <br> University of Southern California
   </p>
-  <p class="date">2021-06-07</p>
+  <p class="date">2021-06-08</p>
 </div>
 <div id="outline" class="slide section level2">
 <h1>Outline</h1>
@@ -404,6 +404,21 @@ Show that it mounted correctly by listing files in that directory</p>
 <li>For example, add certain bind paths to every container:</li>
 </ul>
 <pre><code>export SINGULARITY_BIND=/scratch/&lt;username&gt;,/project/&lt;project_id&gt;</code></pre>
+</div>
+<div id="example-job-script" class="slide section level2">
+<h1>Example job script</h1>
+<pre><code>#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16GB
+#SBATCH --time=1:00:00
+#SBATCH --account=&lt;account_id&gt;
+
+module purge
+
+singularity exec julia.sif julia script.jl</code></pre>
 </div>
 <div id="singularity-documentation" class="slide section level2">
 <h1>Singularity documentation</h1>
