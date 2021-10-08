@@ -1,19 +1,19 @@
 ---
 title: Software Containers with Singularity
 author: Center for Advanced Research Computing <br> University of Southern California
-date: 2021-06-08
+date: Last updated on 2021-10-08
 ---
 
 
 ## Outline
 
-1 --- Overview and motivation  
+1 --- Overview of software containers  
 2 --- Getting pre-built container images  
 3 --- Building custom container images  
 4 --- Running container images
 
 
-## 1 --- Overview and motivation
+## 1 --- Overview of software containers
 
 
 ## What are software containers?
@@ -31,7 +31,11 @@ date: 2021-06-08
 
 - A container format designed for shared HPC systems
 - Most popular container format for HPC
-- Can convert from Docker to Singularity format
+- Can be isolated from or integrated with host system
+- Singularity vs. Docker
+  - Docker requires superuser privileges to run container images
+  - Superuser privileges not available on shared HPC systems
+  - Can convert from Docker to Singularity format
 
 
 ## Singularity architecture
@@ -45,8 +49,9 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 - Install anything you want (based on any Linux OS)
 - Ease installation issues by using pre-built container images
+- Ensure reproducible software environments
 - Ensure the same software stack is used among a research group
-- Use the same software stack across Linux systems (e.g., any HPC center)
+- Ensure the same software stack is used across Linux systems (e.g., any HPC center)
 - Run the same workflows across Linux systems by embedding runscripts in container images
 
 
@@ -58,7 +63,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 - Using proprietary software (typically distributed as binaries) that depends on other software not available on host system
 
 
-## Some limits of Singularity
+## Some limitations of Singularity
 
 - Built for Linux systems
 - Portability depends on a few factors
@@ -71,7 +76,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 ## The container image
 
-- A single image file (executable `.sif`)
+- A single, compressed, read-only image file (executable `.sif`)
 - Bundles application and all software dependencies needed to run it
 - Intended to be immutable
 - If need to modify, rebuild
@@ -119,7 +124,8 @@ Pull a container image from a registry
 ## Building externally
 
 - Need to build outside of CARC systems (requires superuser privileges)
-- But need a Linux system
+- But need a Linux OS
+- Can build in a sandbox mode or with a definition file (recipe)
 - Best approach is to use the cloud-based [Singularity Remote Builder](https://cloud.sylabs.io/home)
 - Or use a virtual machine on your local computer (e.g., [Multipass](https://multipass.run/), [Virtual Box](https://www.virtualbox.org/))
 - Alternatively, create a Docker container image locally, upload to Docker Hub, and then convert to Singularity format
@@ -194,28 +200,28 @@ From: ubuntu:20.04
     apt-get -y clean
   
     cd /opt
-    wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.1-linux-x86_64.tar.gz
-    tar -xf julia-1.6.1-linux-x86_64.tar.gz
-    rm julia-1.6.1-linux-x86_64.tar.gz
+    wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.3-linux-x86_64.tar.gz
+    tar -xf julia-1.6.3-linux-x86_64.tar.gz
+    rm julia-1.6.3-linux-x86_64.tar.gz
 
     mkdir /opt/juliadeot
     export JULIA_DEPOT_PATH=/opt/juliadepot
-    /opt/julia-1.6.1/bin/julia -e 'using Pkg; Pkg.add("StatsKit")'
+    /opt/julia-1.6.3/bin/julia -e 'using Pkg; Pkg.add("StatsKit")'
 
 %test
-    export PATH=/opt/julia-1.6.1/bin:$PATH
+    export PATH=/opt/julia-1.6.3/bin:$PATH
     julia --version
 
 %environment
     export LC_ALL=C
-    export PATH=/opt/julia-1.6.1/bin:$PATH
+    export PATH=/opt/julia-1.6.3/bin:$PATH
     export JULIA_DEPOT_PATH=/opt/juliadepot
 
 %runscript
     julia
 
 %help
-    Ubuntu 20.04 with Julia 1.6.1 and the JuliaStats packages.
+    Ubuntu 20.04 with Julia 1.6.3 and the JuliaStats packages.
 ```
 
 
@@ -223,7 +229,7 @@ From: ubuntu:20.04
 
 ```
 Bootstrap: docker
-From: clearlinux/r-base:4.0.5
+From: clearlinux/r-base:4.1.1
 
 %post
     Rscript -e 'install.packages("data.table", repos = c("https://cloud.r-project.org"))'
@@ -238,13 +244,13 @@ From: clearlinux/r-base:4.0.5
     R
 
 %help
-    Based on the Clear Linux r-base:4.0.5 Docker image. Base R 4.0.5 built with OpenBLAS. Packages installed: data.table
+    Based on the Clear Linux r-base:4.1.1 Docker image. Base R 4.1.1 built with OpenBLAS. Packages installed: data.table
 ```
 
 
 ## Using Singularity Remote Builder
 
-- [Singularity Container Services](https://cloud.sylabs.io/home)
+- [Singularity Container Services](https://cloud.sylabs.io/home) by [Sylabs](https://www.sylabs.io)
 - Free service with up to 11 GB of storage
 - Log in with other account (GitHub, GitLab, Google, Microsoft)
 - Set up access token on CARC systems
@@ -281,51 +287,17 @@ Transfer the image to CARC systems
 - Just a different software environment
 
 
-## Shell example
+## Examples
 
 ```
-$ singularity shell julia.sif
-Singularity> pwd
-/home1/ttrojan/singularity
-Singularity> exit
-exit
-$
+singularity shell julia.sif
+
+singularity exec julia.sif julia -e 'println("Hello world")'
+
+singularity run julia.sif
+
+singularity inspect --runscript julia.sif
 ```
-
-
-## Execute example
-
-```
-$ singularity exec julia.sif julia -e 'println("Hello world")'
-Hello world
-```
-
-
-## Runscript example
-
-```
-$ singularity run julia.sif
-              _
-   _       _ _(_)_     |  Documentation: https://docs.julialang.org
-  (_)     | (_) (_)    |
-   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
-  | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.6.1 (2021-04-23)
- _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
-|__/                   |
-
-julia>
-```
-
-Inspect runscripts:
-
-```
-$ singularity inspect --runscript julia.sif
-#!/bin/sh
-
-    julia
-```
-
 
 ## Exercise 3
 
@@ -335,9 +307,9 @@ Run the command `echo 'Hello world'` within a container
 ## Bind mounting directories to containers
 
 - Some directories are automatically mounted to the container
-  - your `/home1` directory
+  - `/home1/<username>`
   - `/tmp` or `TMPDIR`
-- Use the `--bind` option for additional directories
+- Use the `--bind` option to mount additional directories
 - For example, to add your current working directory and `/scratch` directory:
 
 ```
@@ -348,12 +320,14 @@ singularity exec --bind $PWD,/scratch/<username> julia.sif julia script.jl
 ## Other useful options
 
 - Often a good idea to use `--cleanenv` (or shorter `-e`)
-- May need to use `--no-home` to exclude `/home1` directory (e.g., for Python, R, Julia containers)
+- May need to use `--no-home` to exclude `/home1` directory
+  - e.g., for Python, R, Julia containers
+  - Where packages are installed by default
 
 
 ## Exercise 4
 
-Bind mount your `/scratch` directory to a container  
+Bind mount a `/project` directory to a container  
 Show that it mounted correctly by listing files in that directory
 
 
@@ -362,7 +336,7 @@ Show that it mounted correctly by listing files in that directory
 - Containers need to access host GPU driver
 - Use `--nv` option to allow container access to driver
 - Run `nvidia-smi` on GPU node to see current driver version and compatibility
-- [https://sylabs.io/guides/3.7/user-guide/gpu.html](https://sylabs.io/guides/3.7/user-guide/gpu.html)
+- [GPU support docs](https://singularity.hpcng.org/user-docs/master/gpu.html)
 - Example for TensorFlow runscript:
 
 ```
@@ -375,11 +349,11 @@ singularity run --cleanenv --nv tf.sif
 - Two approaches: hybrid vs. mount
 - Pros and cons for each approach
 - Less portable
-- [https://sylabs.io/guides/3.7/user-guide/mpi.html](https://sylabs.io/guides/3.7/user-guide/mpi.html)
+- [MPI support docs](https://singularity.hpcng.org/user-docs/master/mpi.html)
 - Example for OpenMPI program:
 
 ```
-srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif mpi_program.x
+srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif mpi_program
 ```
 
 
@@ -420,40 +394,19 @@ singularity exec julia.sif julia script.jl
 
 ## Singularity documentation
 
-- [Official documentation](https://sylabs.io/guides/latest/user-guide/)  
+- [Official docs](https://singularity.hpcng.org/user-docs/master/)  
 
 ```
-$ singularity help
-
-Linux container platform optimized for High Performance Computing (HPC) and
-Enterprise Performance Computing (EPC)
-
-Usage:
-  singularity [global options...]
-
-Description:
-  Singularity containers provide an application virtualization layer enabling
-  mobility of compute via both application and environment portability. With
-  Singularity one is capable of building a root file system that runs on any
-  other Linux system where Singularity is installed.
-
-Options:
-  -c, --config string   specify a configuration file (for root or
-                        unprivileged installation only) (default
-                        "/etc/singularity/singularity.conf")
-  -d, --debug           print debugging information (highest verbosity)
-.
-.
-.
+singularity help
 ```
 
 
 ## Additional resources
 
 - [Using Singularity on CARC Systems](https://carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
-- [CARC Singularity template definition files](https://github.com/uschpc/singularity)
-- [Singularity website](https://sylabs.io/singularity/)
-- [Singularity documentation](https://sylabs.io/guides/latest/user-guide/)
+- [CARC Singularity template definition files](https://github.com/uschpc/singularities)
+- [Singularity website](https://singularity.hpcng.org/)
+- [Singularity documentation](https://singularity.hpcng.org/user-docs/master/)
 - [Singularity tutorial](https://singularity-tutorial.github.io/)
 - [Singularity Remote Builder](https://cloud.sylabs.io/home)
 - [Singularity Cloud Library](https://cloud.sylabs.io/library)
@@ -462,10 +415,10 @@ Options:
 - [NVIDIA GPU Cloud Catalog](https://ngc.nvidia.com/catalog)
 
 
-## Getting help
+## CARC support
 
 - [Submit a support ticket](https://carc.usc.edu/user-information/ticket-submission)
 - [User Forum](https://hpc-discourse.usc.edu/)
 - Office Hours
-  - Every Tuesday 2:30-5pm (currently via Zoom)
+  - Every Tuesday 2:30-5pm
   - Register [here](https://carc.usc.edu/news-and-events/events)

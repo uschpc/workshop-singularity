@@ -7,7 +7,6 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Center for Advanced Research Computing   University of Southern California" />
-  <meta name="date" content="2021-06-08" />
   <title>Software Containers with Singularity</title>
   <style type="text/css">
     code{white-space: pre-wrap;}
@@ -30,17 +29,17 @@
   <p class="author">
 Center for Advanced Research Computing <br> University of Southern California
   </p>
-  <p class="date">2021-06-08</p>
+  <p class="date">Last updated on 2021-10-08</p>
 </div>
 <div id="outline" class="slide section level2">
 <h1>Outline</h1>
-<p>1 — Overview and motivation<br />
+<p>1 — Overview of software containers<br />
 2 — Getting pre-built container images<br />
 3 — Building custom container images<br />
 4 — Running container images</p>
 </div>
-<div id="overview-and-motivation" class="slide section level2">
-<h1>1 — Overview and motivation</h1>
+<div id="overview-of-software-containers" class="slide section level2">
+<h1>1 — Overview of software containers</h1>
 </div>
 <div id="what-are-software-containers" class="slide section level2">
 <h1>What are software containers?</h1>
@@ -61,7 +60,13 @@ Center for Advanced Research Computing <br> University of Southern California
 <ul>
 <li>A container format designed for shared HPC systems</li>
 <li>Most popular container format for HPC</li>
+<li>Can be isolated from or integrated with host system</li>
+<li>Singularity vs. Docker
+<ul>
+<li>Docker requires superuser privileges to run container images</li>
+<li>Superuser privileges not available on shared HPC systems</li>
 <li>Can convert from Docker to Singularity format</li>
+</ul></li>
 </ul>
 </div>
 <div id="singularity-architecture" class="slide section level2">
@@ -74,8 +79,9 @@ Center for Advanced Research Computing <br> University of Southern California
 <ul>
 <li>Install anything you want (based on any Linux OS)</li>
 <li>Ease installation issues by using pre-built container images</li>
+<li>Ensure reproducible software environments</li>
 <li>Ensure the same software stack is used among a research group</li>
-<li>Use the same software stack across Linux systems (e.g., any HPC center)</li>
+<li>Ensure the same software stack is used across Linux systems (e.g., any HPC center)</li>
 <li>Run the same workflows across Linux systems by embedding runscripts in container images</li>
 </ul>
 </div>
@@ -88,8 +94,8 @@ Center for Advanced Research Computing <br> University of Southern California
 <li>Using proprietary software (typically distributed as binaries) that depends on other software not available on host system</li>
 </ul>
 </div>
-<div id="some-limits-of-singularity" class="slide section level2">
-<h1>Some limits of Singularity</h1>
+<div id="some-limitations-of-singularity" class="slide section level2">
+<h1>Some limitations of Singularity</h1>
 <ul>
 <li>Built for Linux systems</li>
 <li>Portability depends on a few factors
@@ -105,7 +111,7 @@ Center for Advanced Research Computing <br> University of Southern California
 <div id="the-container-image" class="slide section level2">
 <h1>The container image</h1>
 <ul>
-<li>A single image file (executable <code>.sif</code>)</li>
+<li>A single, compressed, read-only image file (executable <code>.sif</code>)</li>
 <li>Bundles application and all software dependencies needed to run it</li>
 <li>Intended to be immutable</li>
 <li>If need to modify, rebuild</li>
@@ -154,7 +160,8 @@ Center for Advanced Research Computing <br> University of Southern California
 <h1>Building externally</h1>
 <ul>
 <li>Need to build outside of CARC systems (requires superuser privileges)</li>
-<li>But need a Linux system</li>
+<li>But need a Linux OS</li>
+<li>Can build in a sandbox mode or with a definition file (recipe)</li>
 <li>Best approach is to use the cloud-based <a href="https://cloud.sylabs.io/home">Singularity Remote Builder</a></li>
 <li>Or use a virtual machine on your local computer (e.g., <a href="https://multipass.run/">Multipass</a>, <a href="https://www.virtualbox.org/">Virtual Box</a>)</li>
 <li>Alternatively, create a Docker container image locally, upload to Docker Hub, and then convert to Singularity format</li>
@@ -227,33 +234,33 @@ From: ubuntu:20.04
     apt-get -y clean
   
     cd /opt
-    wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.1-linux-x86_64.tar.gz
-    tar -xf julia-1.6.1-linux-x86_64.tar.gz
-    rm julia-1.6.1-linux-x86_64.tar.gz
+    wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.3-linux-x86_64.tar.gz
+    tar -xf julia-1.6.3-linux-x86_64.tar.gz
+    rm julia-1.6.3-linux-x86_64.tar.gz
 
     mkdir /opt/juliadeot
     export JULIA_DEPOT_PATH=/opt/juliadepot
-    /opt/julia-1.6.1/bin/julia -e &#39;using Pkg; Pkg.add(&quot;StatsKit&quot;)&#39;
+    /opt/julia-1.6.3/bin/julia -e &#39;using Pkg; Pkg.add(&quot;StatsKit&quot;)&#39;
 
 %test
-    export PATH=/opt/julia-1.6.1/bin:$PATH
+    export PATH=/opt/julia-1.6.3/bin:$PATH
     julia --version
 
 %environment
     export LC_ALL=C
-    export PATH=/opt/julia-1.6.1/bin:$PATH
+    export PATH=/opt/julia-1.6.3/bin:$PATH
     export JULIA_DEPOT_PATH=/opt/juliadepot
 
 %runscript
     julia
 
 %help
-    Ubuntu 20.04 with Julia 1.6.1 and the JuliaStats packages.</code></pre>
+    Ubuntu 20.04 with Julia 1.6.3 and the JuliaStats packages.</code></pre>
 </div>
 <div id="example-definition-file-2" class="slide section level2">
 <h1>Example definition file 2</h1>
 <pre><code>Bootstrap: docker
-From: clearlinux/r-base:4.0.5
+From: clearlinux/r-base:4.1.1
 
 %post
     Rscript -e &#39;install.packages(&quot;data.table&quot;, repos = c(&quot;https://cloud.r-project.org&quot;))&#39;
@@ -268,12 +275,12 @@ From: clearlinux/r-base:4.0.5
     R
 
 %help
-    Based on the Clear Linux r-base:4.0.5 Docker image. Base R 4.0.5 built with OpenBLAS. Packages installed: data.table</code></pre>
+    Based on the Clear Linux r-base:4.1.1 Docker image. Base R 4.1.1 built with OpenBLAS. Packages installed: data.table</code></pre>
 </div>
 <div id="using-singularity-remote-builder" class="slide section level2">
 <h1>Using Singularity Remote Builder</h1>
 <ul>
-<li><a href="https://cloud.sylabs.io/home">Singularity Container Services</a></li>
+<li><a href="https://cloud.sylabs.io/home">Singularity Container Services</a> by <a href="https://www.sylabs.io">Sylabs</a></li>
 <li>Free service with up to 11 GB of storage</li>
 <li>Log in with other account (GitHub, GitLab, Google, Microsoft)</li>
 <li>Set up access token on CARC systems</li>
@@ -308,38 +315,15 @@ Transfer the image to CARC systems<br />
 <li>Just a different software environment</li>
 </ul>
 </div>
-<div id="shell-example" class="slide section level2">
-<h1>Shell example</h1>
-<pre><code>$ singularity shell julia.sif
-Singularity&gt; pwd
-/home1/ttrojan/singularity
-Singularity&gt; exit
-exit
-$</code></pre>
-</div>
-<div id="execute-example" class="slide section level2">
-<h1>Execute example</h1>
-<pre><code>$ singularity exec julia.sif julia -e &#39;println(&quot;Hello world&quot;)&#39;
-Hello world</code></pre>
-</div>
-<div id="runscript-example" class="slide section level2">
-<h1>Runscript example</h1>
-<pre><code>$ singularity run julia.sif
-              _
-   _       _ _(_)_     |  Documentation: https://docs.julialang.org
-  (_)     | (_) (_)    |
-   _ _   _| |_  __ _   |  Type &quot;?&quot; for help, &quot;]?&quot; for Pkg help.
-  | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.6.1 (2021-04-23)
- _/ |\__&#39;_|_|_|\__&#39;_|  |  Official https://julialang.org/ release
-|__/                   |
+<div id="examples" class="slide section level2">
+<h1>Examples</h1>
+<pre><code>singularity shell julia.sif
 
-julia&gt;</code></pre>
-<p>Inspect runscripts:</p>
-<pre><code>$ singularity inspect --runscript julia.sif
-#!/bin/sh
+singularity exec julia.sif julia -e &#39;println(&quot;Hello world&quot;)&#39;
 
-    julia</code></pre>
+singularity run julia.sif
+
+singularity inspect --runscript julia.sif</code></pre>
 </div>
 <div id="exercise-3" class="slide section level2">
 <h1>Exercise 3</h1>
@@ -350,10 +334,10 @@ julia&gt;</code></pre>
 <ul>
 <li>Some directories are automatically mounted to the container
 <ul>
-<li>your <code>/home1</code> directory</li>
+<li><code>/home1/&lt;username&gt;</code></li>
 <li><code>/tmp</code> or <code>TMPDIR</code></li>
 </ul></li>
-<li>Use the <code>--bind</code> option for additional directories</li>
+<li>Use the <code>--bind</code> option to mount additional directories</li>
 <li>For example, to add your current working directory and <code>/scratch</code> directory:</li>
 </ul>
 <pre><code>singularity exec --bind $PWD,/scratch/&lt;username&gt; julia.sif julia script.jl</code></pre>
@@ -362,12 +346,16 @@ julia&gt;</code></pre>
 <h1>Other useful options</h1>
 <ul>
 <li>Often a good idea to use <code>--cleanenv</code> (or shorter <code>-e</code>)</li>
-<li>May need to use <code>--no-home</code> to exclude <code>/home1</code> directory (e.g., for Python, R, Julia containers)</li>
+<li>May need to use <code>--no-home</code> to exclude <code>/home1</code> directory
+<ul>
+<li>e.g., for Python, R, Julia containers</li>
+<li>Where packages are installed by default</li>
+</ul></li>
 </ul>
 </div>
 <div id="exercise-4" class="slide section level2">
 <h1>Exercise 4</h1>
-<p>Bind mount your <code>/scratch</code> directory to a container<br />
+<p>Bind mount a <code>/project</code> directory to a container<br />
 Show that it mounted correctly by listing files in that directory</p>
 </div>
 <div id="running-containers-on-gpus" class="slide section level2">
@@ -376,7 +364,7 @@ Show that it mounted correctly by listing files in that directory</p>
 <li>Containers need to access host GPU driver</li>
 <li>Use <code>--nv</code> option to allow container access to driver</li>
 <li>Run <code>nvidia-smi</code> on GPU node to see current driver version and compatibility</li>
-<li><a href="https://sylabs.io/guides/3.7/user-guide/gpu.html">https://sylabs.io/guides/3.7/user-guide/gpu.html</a></li>
+<li><a href="https://singularity.hpcng.org/user-docs/master/gpu.html">GPU support docs</a></li>
 <li>Example for TensorFlow runscript:</li>
 </ul>
 <pre><code>singularity run --cleanenv --nv tf.sif</code></pre>
@@ -387,10 +375,10 @@ Show that it mounted correctly by listing files in that directory</p>
 <li>Two approaches: hybrid vs. mount</li>
 <li>Pros and cons for each approach</li>
 <li>Less portable</li>
-<li><a href="https://sylabs.io/guides/3.7/user-guide/mpi.html">https://sylabs.io/guides/3.7/user-guide/mpi.html</a></li>
+<li><a href="https://singularity.hpcng.org/user-docs/master/mpi.html">MPI support docs</a></li>
 <li>Example for OpenMPI program:</li>
 </ul>
-<pre><code>srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif mpi_program.x</code></pre>
+<pre><code>srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif mpi_program</code></pre>
 </div>
 <div id="singularity-environment-variables" class="slide section level2">
 <h1>Singularity environment variables</h1>
@@ -423,38 +411,17 @@ singularity exec julia.sif julia script.jl</code></pre>
 <div id="singularity-documentation" class="slide section level2">
 <h1>Singularity documentation</h1>
 <ul>
-<li><a href="https://sylabs.io/guides/latest/user-guide/">Official documentation</a></li>
+<li><a href="https://singularity.hpcng.org/user-docs/master/">Official docs</a></li>
 </ul>
-<pre><code>$ singularity help
-
-Linux container platform optimized for High Performance Computing (HPC) and
-Enterprise Performance Computing (EPC)
-
-Usage:
-  singularity [global options...]
-
-Description:
-  Singularity containers provide an application virtualization layer enabling
-  mobility of compute via both application and environment portability. With
-  Singularity one is capable of building a root file system that runs on any
-  other Linux system where Singularity is installed.
-
-Options:
-  -c, --config string   specify a configuration file (for root or
-                        unprivileged installation only) (default
-                        &quot;/etc/singularity/singularity.conf&quot;)
-  -d, --debug           print debugging information (highest verbosity)
-.
-.
-.</code></pre>
+<pre><code>singularity help</code></pre>
 </div>
 <div id="additional-resources" class="slide section level2">
 <h1>Additional resources</h1>
 <ul>
 <li><a href="https://carc.usc.edu/user-information/user-guides/software-and-programming/singularity">Using Singularity on CARC Systems</a></li>
-<li><a href="https://github.com/uschpc/singularity">CARC Singularity template definition files</a></li>
-<li><a href="https://sylabs.io/singularity/">Singularity website</a></li>
-<li><a href="https://sylabs.io/guides/latest/user-guide/">Singularity documentation</a></li>
+<li><a href="https://github.com/uschpc/singularities">CARC Singularity template definition files</a></li>
+<li><a href="https://singularity.hpcng.org/">Singularity website</a></li>
+<li><a href="https://singularity.hpcng.org/user-docs/master/">Singularity documentation</a></li>
 <li><a href="https://singularity-tutorial.github.io/">Singularity tutorial</a></li>
 <li><a href="https://cloud.sylabs.io/home">Singularity Remote Builder</a></li>
 <li><a href="https://cloud.sylabs.io/library">Singularity Cloud Library</a></li>
@@ -463,14 +430,14 @@ Options:
 <li><a href="https://ngc.nvidia.com/catalog">NVIDIA GPU Cloud Catalog</a></li>
 </ul>
 </div>
-<div id="getting-help" class="slide section level2">
-<h1>Getting help</h1>
+<div id="carc-support" class="slide section level2">
+<h1>CARC support</h1>
 <ul>
 <li><a href="https://carc.usc.edu/user-information/ticket-submission">Submit a support ticket</a></li>
 <li><a href="https://hpc-discourse.usc.edu/">User Forum</a></li>
 <li>Office Hours
 <ul>
-<li>Every Tuesday 2:30-5pm (currently via Zoom)</li>
+<li>Every Tuesday 2:30-5pm</li>
 <li>Register <a href="https://carc.usc.edu/news-and-events/events">here</a></li>
 </ul></li>
 </ul>
