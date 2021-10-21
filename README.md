@@ -24,4 +24,5 @@ Learning objectives:
 [Singularity Cloud Library](https://cloud.sylabs.io/library)  
 [Docker Hub](https://hub.docker.com/)  
 [BioContainers](https://biocontainers.pro)  
+[Dockstore](https://dockstore.org/)  
 [NVIDIA GPU Cloud Catalog](https://ngc.nvidia.com/catalog)
