@@ -15,45 +15,31 @@ class: left, top, title-slide
 
 ### Derek Strong <br> dstrong[at]usc.edu <br> <br> Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2021-10-20
+### Last updated on 2022-02-11
 
 ---
 
 ## Outline
 
-1. Overview of software containers  
-2. Getting pre-built container images  
-3. Building custom container images  
+1. Overview of software containers
+2. Getting pre-built container images
+3. Building custom container images
 4. Running containers
 
 ---
 
-## What are software containers?
+## What is a software container?
 
-- Portable, reproducible, stable, and secure software environments
-- Bundles a main application and all its dependencies
-- Provides a custom user space
-- OS-level virtualization
+- A software environment that bundles a main application and all its dependencies
+- OS-level virtualization with process-level isolation on host system
+- Provides a custom user space separate from host system
 - Different from a virtual machine
-  - Containers have direct access to the kernel
+  - Containers have direct access to the host kernel
   - Virtual machines have indirect access (performance penalty)
 
 ---
 
-## Singularity containers
-
-- A container format designed for shared HPC systems
-- Most popular container format for HPC
-- Can be isolated from or integrated with host system
-- Singularity vs. Docker
-  - Docker requires superuser privileges to run container images
-  - Superuser privileges not available on shared HPC systems
-  - Can convert from Docker to Singularity format
-  - Or vice versa: [singularity2docker.sh](https://github.com/singularityhub/singularity2docker)
-
----
-
-## Singularity architecture
+## Container architecture
 
 <img src="singularity-architecture.png" height="450" />
 
@@ -61,7 +47,80 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 ---
 
-## Why use Singularity for research?
+## What do containers enable?
+
+- A software environment that is:
+  - Shareable
+  - Portable
+  - Stable
+  - Reproducible
+  - Isolated
+  - Secure
+
+---
+
+## Some terminology
+
+- **Container image** &mdash; executable file saved on disk (immutable blueprint)
+- **Container** &mdash; running instance of a container image
+- **Container engine** &mdash; application that builds and runs container images
+- **Host system** &mdash; system that runs the container engine
+- **Container registry** &mdash; catalog of container images
+
+---
+
+## Diverse container ecosystem
+
+- Container image formats
+  - Docker, LXD, etc.
+  - Singularity
+- Container engines
+  - Docker, LXC, etc.
+  - Singularity
+- Container registries
+  - Docker Hub, Quay, etc.
+  - Singularity Cloud Library
+- Open Container Initiative (OCI) for interoperability
+  - Image format standard
+  - Runtime standard
+  - Distribution standard
+
+---
+
+## Docker vs. Singularity
+
+- Docker
+  - Designed for running persistent services (e.g., web apps)
+  - Requires superuser privileges to run container images
+- Singularity
+  - Designed for running HPC workloads
+  - Does not require superuser privileges to run container images
+- Superuser privileges restricted to system admins on shared HPC systems
+- Both adhere to OCI image format standard
+  - Can convert images from Docker to Singularity format
+  - Or vice versa: [singularity2docker.sh](https://github.com/singularityhub/singularity2docker)
+
+---
+
+## Singularity containers
+
+- A container engine designed for HPC and shared HPC systems running Linux
+- Originally developed at LBNL (spinoff firm Sylabs with open-core model)
+- Can be fully isolated from or integrated with host system
+  - Defaults to integration
+  - Useful for parallel file systems, GPUs, high-speed networks
+- 2021 split in developer community
+  - SingularityCE (from Sylabs)
+  - Apptainer (project within Linux Foundation)
+- Most popular container engine for HPC
+- Alternatives for HPC:
+  - Sarus
+  - Charliecloud
+  - Shifter
+
+---
+
+## Why use Singularity for research computing?
 
 - Install anything you want (based on any Linux OS)
 - Ease installation issues by using pre-built container images
@@ -69,12 +128,13 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 - Ensure the same software stack is used among a research group
 - Ensure the same software stack is used across Linux systems (e.g., any HPC center)
 - Run the same workflows across Linux systems by embedding runscripts in container images
+- Experiment with development versions of software
 
 ---
 
 ## Some specific Singularity use cases
 
-- Converting Docker images to Singularity images
+- Converting Docker images to Singularity images to run on HPC systems
 - Using applications that need older or cutting-edge or very specific versions of software
 - Bundling complex software stacks for easier distribution
 - Using proprietary software (typically distributed as binaries) that depends on other software not available on host system
@@ -88,18 +148,17 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
   - CPU architecture format (x86 vs. ARM)
   - Binary format (ELF)
   - Kernel, glibc, other API compatibility
-- Not always backwards compatible
+- Not always backward compatible (v2 vs. v3)
 - Need superuser privileges to build images
+- No build layer caches
 
 ---
 
-## The container image
+## Singularity container image format
 
-- A single, compressed, read-only image file (executable `.sif`)
-- Bundles application and all software dependencies needed to run it
-- Intended to be immutable
-- If need to modify, rebuild
-- A container is a running instance of a container image
+- A single immutable, compressed, executable image file (`.sif`)
+- If you need to modify an image, you have to rebuild it or use as base image
+- Adheres to OCI image format standard
 
 ---
 
@@ -157,7 +216,7 @@ singularity pull docker://clearlinux:latest
 ## Definition files
 
 - Recipe for building a container image
-  - Start with a base Linux OS (e.g., Debian, Ubuntu, CentOS, Clear Linux)
+  - Start with a base Linux OS (e.g., Debian, Ubuntu, CentOS, Rocky Linux, Clear Linux)
   - Or start with existing container image from a registry
   - Then install software, add files, etc.
 - Similar to a Dockerfile, but different syntax
@@ -196,52 +255,73 @@ From: ...
 
 ```bash
 Bootstrap: docker
-From: julia:1.6.3
+From: clearlinux/r-base:latest
 
 %post
-    mkdir /opt/depot
-    export JULIA_DEPOT_PATH=/opt/depot
-    julia -e 'using Pkg; Pkg.add("StatsKit")'
+    swupd update --quiet
+    swupd bundle-add --quiet R-stan
+    swupd clean --all
 
 %test
-    julia --version
+    R --version
 
 %environment
     export LC_ALL=C
-    export JULIA_DEPOT_PATH=/opt/depot
 
 %runscript
-    julia
+    R
 
 %help
-    Debian 10 with Julia 1.6.3 and the JuliaStats packages.
+    Clear Linux with latest version of R linked to OpenBLAS and rstan package installed.
 ```
 
 ---
 
 ## Using Singularity Remote Builder
 
-- [Singularity Container Services](https://cloud.sylabs.io/home) by [Sylabs](https://www.sylabs.io)
+- [Singularity Container Services](https://cloud.sylabs.io) by [Sylabs](https://www.sylabs.io)
 - Free service with up to 11 GB of storage
 - Log in with other account (GitHub, GitLab, Google, Microsoft)
-- Set up access token on CARC systems
+- Set up [access token](https://cloud.sylabs.io/tokens) on CARC systems 
 - Use web interface to build
 - Or build remotely from the command line
 
 ```bash
-singularity build --remote julia.sif julia.def
+singularity build --remote rstan.sif rstan.def
 ```
+
+---
+
+## Installing optimized software
+
+- Tradeoff between portability and performance
+- Choice of base OS for an image can be important for performance
+- Using Linux package managers (e.g., APT, DNF) typically downloads generic binaries
+- APT provides [apt-build](https://manpages.debian.org/bullseye/apt-build/apt-build.1.en.html) to build packages from source with CPU architecture optimizations
+- Clear Linux swupd package manager provides optimized builds for Intel CPU architectures (limited software choices)
+- [Spack](https://spack.readthedocs.io/en/latest/index.html) can be used to build and [containerize](https://spack.readthedocs.io/en/latest/containers.html) optimized software stacks
+
+---
+
+## Multi-stage builds
+
+- Singularity also supports [multi-stage builds](https://sylabs.io/guides/latest/user-guide/definition_files.html#multi-stage-builds)
+- Primary use case is to minimize final image size
+- Build main application in the first stage (requiring build tools)
+- Copy compiled binary to a clean environment in the second stage
+- So final image does not contain unneeded build tools
+
 
 ---
 
 ## Inspecting container images
 
 ```bash
-singularity inspect --deffile julia.sif
+singularity inspect --deffile rstan.sif
 
-singularity inspect --environment julia.sif
+singularity inspect --environment rstan.sif
 
-singularity inspect --runscript julia.sif
+singularity inspect --runscript rstan.sif
 ```
 
 ---
@@ -260,11 +340,11 @@ singularity inspect --runscript julia.sif
 ## Examples
 
 ```bash
-singularity shell julia.sif
+singularity shell rstan.sif
 
-singularity exec julia.sif julia -e 'println("Hello world")'
+singularity exec rstan.sif Rscript -e 'print("Hello world")'
 
-singularity run julia.sif
+singularity run rstan.sif
 ```
 
 ---
@@ -290,13 +370,13 @@ singularity run julia.sif
 - For example, to add your current working directory and `/scratch` directory:
 
 ```bash
-singularity exec --bind $PWD,/scratch/<username> julia.sif julia script.jl
+singularity exec --bind $PWD,/scratch/<username> rstan.sif Rscript script.R
 ```
 
 - Can also change name when binding if needed:
 
 ```bash
-singularity exec --bind $PWD:/mydir julia.sif julia script.jl
+singularity exec --bind $PWD:/mydir rstan.sif Rscript script.R
 ```
 
 ---
@@ -310,8 +390,10 @@ singularity exec --bind $PWD:/mydir julia.sif julia script.jl
   - Can lead to conflicts with software installed in container
 
 ```bash
-singularity exec --no-home --bind $PWD julia.sif julia script.jl
+singularity exec --no-home --bind $PWD rstan.sif Rscript script.R
 ```
+
+- Use `--containall` for maximum isolation
 
 ---
 
@@ -320,7 +402,7 @@ singularity exec --no-home --bind $PWD julia.sif julia script.jl
 - Containers need to access host GPU driver
 - Use `--nv` option to allow container access to driver
 - Run `nvidia-smi` on GPU node to see current driver version and compatibility
-- [GPU support docs](https://singularity.hpcng.org/user-docs/master/gpu.html)
+- [GPU support docs](https://sylabs.io/guides/latest/user-guide/gpu.html)
 - Example for a TensorFlow runscript:
 
 ```bash
@@ -334,11 +416,11 @@ singularity run --cleanenv --nv tf.sif
 - Two approaches: hybrid vs. mount
 - Pros and cons for each approach
 - Less portable because it depends on MPI versions available on host system
-- [MPI support docs](https://singularity.hpcng.org/user-docs/master/mpi.html)
+- [MPI support docs](https://sylabs.io/guides/latest/user-guide/mpi.html)
 - Example for an OpenMPI program:
 
 ```bash
-srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif mpi_program
+srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif ./mpi_program
 ```
 
 ---
@@ -375,14 +457,14 @@ export SINGULARITY_BIND=/scratch/<username>,/project/<project_id>
 
 module purge
 
-singularity exec --no-home --bind $PWD julia.sif julia script.jl
+singularity exec --cleanenv --no-home --bind $PWD rstan.sif Rscript script.R
 ```
 
 ---
 
 ## Singularity documentation
 
-- [Official docs](https://singularity.hpcng.org/user-docs/master/)  
+- [Official docs](https://sylabs.io/guides/latest/user-guide/)  
 
 ```bash
 singularity help
@@ -398,27 +480,28 @@ singularity help run
 
 ## Additional resources
 
-- [Using Singularity on CARC Systems](https://carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
+- [Using Singularity on CARC Systems](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
 - [CARC Singularity template definition files](https://github.com/uschpc/singularities)
-- [Singularity website](https://singularity.hpcng.org/)
-- [Singularity documentation](https://singularity.hpcng.org/user-docs/master/)
+- [Singularity website](https://sylabs.io/singularity)
+- [Singularity documentation](https://sylabs.io/guides/master/user-guide/)
 - [Singularity tutorial](https://singularity-tutorial.github.io/)
-- [Singularity Remote Builder](https://cloud.sylabs.io/home)
+- [Singularity Remote Builder](https://cloud.sylabs.io/builder)
 - [Singularity Cloud Library](https://cloud.sylabs.io/library)
 - [Docker Hub](https://hub.docker.com/)
 - [BioContainers](https://biocontainers.pro)
 - [Dockstore](https://www.dockstore.org/)
+- [Intel oneContainer Portal](https://www.intel.com/content/www/us/en/developer/tools/containers/overview.html)
 - [NVIDIA GPU Cloud Catalog](https://ngc.nvidia.com/catalog)
 
 ---
 
 ## CARC support
 
-- [Submit a support ticket](https://carc.usc.edu/user-information/ticket-submission)
+- [Submit a support ticket](https://www.carc.usc.edu/user-information/ticket-submission)
 - [User Forum](https://hpc-discourse.usc.edu/)
 - Office Hours
   - Every Tuesday 2:30-5pm
-  - Register [here](https://carc.usc.edu/news-and-events/events)
+  - Register [here](https://www.carc.usc.edu/news-and-events/events)
 
 ---
 
