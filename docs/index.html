@@ -15,7 +15,7 @@ class: left, top, title-slide
 
 ### Derek Strong <br> dstrong[at]usc.edu <br> <br> Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2022-02-11
+### Last updated on 2022-02-14
 
 ---
 
@@ -195,8 +195,9 @@ singularity pull docker://clearlinux:latest
 
 - Need to build outside of CARC systems (requires superuser privileges)
 - But need a Linux OS
-- Can build in a sandbox mode or with a definition file (recipe)
-- Best approach is to use the cloud-based [Singularity Remote Builder](https://cloud.sylabs.io/home)
+- Can build interactively in a sandbox mode (keep track of commands)
+- Better to build in batch mode with a definition file (reproducible recipe)
+- Best approach is to use the cloud-based [Singularity Remote Builder](https://cloud.sylabs.io/builder)
 - Or use a virtual machine on your local computer (e.g., [Multipass](https://multipass.run/), [Virtual Box](https://www.virtualbox.org/))
 - Alternatively, create a Docker container image locally, upload to Docker Hub, and then pull
 
@@ -400,10 +401,11 @@ singularity exec --no-home --bind $PWD rstan.sif Rscript script.R
 ## Running containers on GPUs
 
 - Containers need to access host GPU driver
-- Use `--nv` option to allow container access to driver
-- Run `nvidia-smi` on GPU node to see current driver version and compatibility
+- Use `--nv` option to access Nvidia GPUs
+- Run `nvidia-smi` on Nvidia GPU node to see current driver version and compatibility
+- Use `--rocm` option to access AMD ROCm GPUs (none on CARC systems)
 - [GPU support docs](https://sylabs.io/guides/latest/user-guide/gpu.html)
-- Example for a TensorFlow runscript:
+- Example for a TensorFlow runscript using Nvidia GPU:
 
 ```bash
 singularity run --cleanenv --nv tf.sif
