@@ -16,7 +16,8 @@ Learning objectives:
 ### Additional resources
 
 [Using Singularity on CARC Systems](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)  
-[CARC Singularity template definition files](https://github.com/uschpc/singularities)  
+[CARC Singularity template definition files](https://github.com/uschpc/singularities)
+
 [Singularity website](https://sylabs.io/singularity/)  
 [Singularity documentation](https://sylabs.io/guides/latest/user-guide/)  
 [Singularity tutorial](https://singularity-tutorial.github.io/)  

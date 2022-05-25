@@ -13,9 +13,9 @@ class: left, top, title-slide
 
 # Software Containers with Singularity
 
-### Derek Strong <br> dstrong[at]usc.edu <br> <br> Center for Advanced Research Computing <br> University of Southern California <br>
+### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2022-02-14
+### Last updated on 2022-05-25
 
 ---
 
@@ -357,21 +357,22 @@ singularity run rstan.sif
   - `/lib`
   - `/usr`
 - Some directories from the host system are automatically mounted to the container
-  - `/dev`
-  - `/home1/<username>` (`$HOME`)
+  - `/home1/<username>`
+  - `/tmp`
+  - `/var/tmp`
   - `/proc`
   - `/sys`
-  - `/tmp` (`$TMPDIR`)
+  - `/dev`
 
 ---
 
 ## Bind mounting directories to containers
 
 - Use the `--bind` option to mount files or directories
-- For example, to add your current working directory and `/scratch` directory:
+- For example, to add your current working directory and `/scratch1` directory:
 
 ```bash
-singularity exec --bind $PWD,/scratch/<username> rstan.sif Rscript script.R
+singularity exec --bind $PWD,/scratch1/<username> rstan.sif Rscript script.R
 ```
 
 - Can also change name when binding if needed:
@@ -386,15 +387,15 @@ singularity exec --bind $PWD:/mydir rstan.sif Rscript script.R
 
 - Often a good idea to use `--cleanenv` (or shorter `-e`)
 - May need to use `--no-home` to exclude `/home1` directory
-  - e.g., for Python, R, Julia containers
-  - Packages are installed in `/home1` by default
+  - e.g., for Python or R containers
+  - Packages are installed in your home directory by default
   - Can lead to conflicts with software installed in container
 
 ```bash
 singularity exec --no-home --bind $PWD rstan.sif Rscript script.R
 ```
 
-- Use `--containall` for maximum isolation
+- Use `--containall` for maximum isolation from host system
 
 ---
 
@@ -431,16 +432,16 @@ srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif ./mpi_program
 
 - Some useful environment variables can be set
 - Add to `~/.bashrc` to automatically set every time you log in
-- For example, change cache directory from `/home1` to `/scratch`:
+- For example, change cache directory from `/home1` to `/scratch1`:
 
 ```bash
-export SINGULARITY_CACHEDIR=/scratch/<username>/.singularity
+export SINGULARITY_CACHEDIR=/scratch1/<username>/.singularity
 ```
 
 - For example, add certain bind paths to every container:
 
 ```bash
-export SINGULARITY_BIND=/scratch/<username>,/project/<project_id>
+export SINGULARITY_BIND=/scratch1/<username>,/project/<project_id>
 ```
 
 ---
@@ -450,12 +451,13 @@ export SINGULARITY_BIND=/scratch/<username>,/project/<project_id>
 ```bash
 #!/bin/bash
 
+#SBATCH --account=<project_id>
+#SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16GB
 #SBATCH --time=1:00:00
-#SBATCH --account=<project_id>
 
 module purge
 
@@ -482,8 +484,6 @@ singularity help run
 
 ## Additional resources
 
-- [Using Singularity on CARC Systems](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
-- [CARC Singularity template definition files](https://github.com/uschpc/singularities)
 - [Singularity website](https://sylabs.io/singularity)
 - [Singularity documentation](https://sylabs.io/guides/master/user-guide/)
 - [Singularity tutorial](https://singularity-tutorial.github.io/)
@@ -499,6 +499,8 @@ singularity help run
 
 ## CARC support
 
+- [Using Singularity on CARC Systems](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
+- [CARC Singularity template definition files](https://github.com/uschpc/singularities)
 - [Submit a support ticket](https://www.carc.usc.edu/user-information/ticket-submission)
 - [User Forum](https://hpc-discourse.usc.edu/)
 - Office Hours
