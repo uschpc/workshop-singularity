@@ -15,7 +15,7 @@ class: left, top, title-slide
 
 ### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2022-05-25
+### Last updated on 2022-09-23
 
 ---
 
@@ -43,7 +43,7 @@ class: left, top, title-slide
 
 <img src="singularity-architecture.png" height="450" />
 
-Source: [Singularity Community and SingularityPRO on high-performance servers](https://sylabs.io/assets/white-papers/Sylabs_Whitepaper_High_performance_server_v3.pdf)
+Source: [Singularity Community and SingularityPRO on high-performance servers](https://sylabs.io/download/singularity-community-and-singularitypro-on-high-performance-servers/)
 
 ---
 
@@ -113,7 +113,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
   - SingularityCE (from Sylabs)
   - Apptainer (project within Linux Foundation)
 - Most popular container engine for HPC
-- Alternatives for HPC:
+- Alternatives for HPC
   - Sarus
   - Charliecloud
   - Shifter
@@ -124,20 +124,13 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 - Install anything you want (based on any Linux OS)
 - Ease installation issues by using pre-built container images
+- If developer, bundle complex software stacks for easier distribution
+- Convert Docker images to Singularity images to run on HPC systems
 - Ensure reproducible software environments
 - Ensure the same software stack is used among a research group
 - Ensure the same software stack is used across Linux systems (e.g., any HPC center)
-- Run the same workflows across Linux systems by embedding runscripts in container images
-- Experiment with development versions of software
-
----
-
-## Some specific Singularity use cases
-
-- Converting Docker images to Singularity images to run on HPC systems
-- Using applications that need older or cutting-edge or very specific versions of software
-- Bundling complex software stacks for easier distribution
-- Using proprietary software (typically distributed as binaries) that depends on other software not available on host system
+- Use older or development versions of software (not available in modules)
+- Use proprietary software (typically distributed as binaries) that depends on other software not available on host system
 
 ---
 
@@ -308,8 +301,8 @@ singularity build --remote rstan.sif rstan.def
 
 - Singularity also supports [multi-stage builds](https://sylabs.io/guides/latest/user-guide/definition_files.html#multi-stage-builds)
 - Primary use case is to minimize final image size
-- Build main application in the first stage (requiring build tools)
-- Copy compiled binary to a clean environment in the second stage
+- Build main application in the first stage (requiring build-time dependencies)
+- Copy compiled binary to a clean environment in the second stage (requiring run-time dependencies)
 - So final image does not contain unneeded build tools
 
 
@@ -505,7 +498,7 @@ singularity help run
 - [User Forum](https://hpc-discourse.usc.edu/)
 - Office Hours
   - Every Tuesday 2:30-5pm
-  - Register [here](https://www.carc.usc.edu/news-and-events/events)
+  - Get Zoom link [here](https://www.carc.usc.edu/education-and-resources/office-hours)
 
 ---
 
