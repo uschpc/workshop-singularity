@@ -15,7 +15,7 @@ class: left, top, title-slide
 
 ### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2022-09-23
+### Last updated on 2023-02-03
 
 ---
 
@@ -147,7 +147,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 ---
 
-## Singularity container image format
+## Singularity Image Format (SIF)
 
 - A single immutable, compressed, executable image file (`.sif`)
 - If you need to modify an image, you have to rebuild it or use as base image
@@ -192,7 +192,14 @@ singularity pull docker://clearlinux:latest
 - Better to build in batch mode with a definition file (reproducible recipe)
 - Best approach is to use the cloud-based [Singularity Remote Builder](https://cloud.sylabs.io/builder)
 - Or use a virtual machine on your local computer (e.g., [Multipass](https://multipass.run/), [Virtual Box](https://www.virtualbox.org/))
-- Alternatively, create a Docker container image locally, upload to Docker Hub, and then pull
+
+---
+
+## Workflow considerations
+
+- Could build container images using Docker, and then convert to SIF
+- Could also use Git-based CI/CD as part of build process
+- For reproducibility purposes, document and version control definition files
 
 ---
 
@@ -211,7 +218,7 @@ singularity pull docker://clearlinux:latest
 
 - Recipe for building a container image
   - Start with a base Linux OS (e.g., Debian, Ubuntu, CentOS, Rocky Linux, Clear Linux)
-  - Or start with existing container image from a registry
+  - Or start with any existing container image from a registry
   - Then install software, add files, etc.
 - Similar to a Dockerfile, but different syntax
 - [CARC Singularity template definition files](https://github.com/uschpc/singularities)
@@ -305,6 +312,37 @@ singularity build --remote rstan.sif rstan.def
 - Copy compiled binary to a clean environment in the second stage (requiring run-time dependencies)
 - So final image does not contain unneeded build tools
 
+---
+
+## Limited /tmp space
+
+- Singularity uses /tmp space when pulling and building images
+- For large images, the /tmp space may be too small (limited to 1 GB on CARC systems)
+- In these cases, on a compute node, use /dev/shm space instead (limited by memory request)
+- Change location of temporary files with environment variable:
+
+```bash
+export TMPDIR=/dev/shm
+```
+
+---
+
+## Image cache
+
+- Images are cached when you pull them, which uses storage space
+- By default, the cache is located at `~/.singularity/cache`
+- Change location of cache directory with environment variable:
+
+```bash
+export SINGULARITY_CACHEDIR=/scratch1/<username>/singularity
+```
+
+- List and clean the cache:
+
+```bash
+singularity cache list
+singularity cache clean
+```
 
 ---
 
@@ -368,10 +406,16 @@ singularity run rstan.sif
 singularity exec --bind $PWD,/scratch1/<username> rstan.sif Rscript script.R
 ```
 
-- Can also change name when binding if needed:
+- Can change name when binding if needed:
 
 ```bash
 singularity exec --bind $PWD:/mydir rstan.sif Rscript script.R
+```
+
+- Can use environment variable:
+
+```bash
+export SINGULARITY_BIND=/scratch1/<username>,/project/<project_id>
 ```
 
 ---
@@ -392,14 +436,14 @@ singularity exec --no-home --bind $PWD rstan.sif Rscript script.R
 
 ---
 
-## Running containers on GPUs
+## Running containers using GPUs
 
 - Containers need to access host GPU driver
-- Use `--nv` option to access Nvidia GPUs
-- Run `nvidia-smi` on Nvidia GPU node to see current driver version and compatibility
+- Use `--nv` option to access NVIDIA GPUs
+- Run `nvidia-smi` on NVIDIA GPU node to see current driver version and compatibility
 - Use `--rocm` option to access AMD ROCm GPUs (none on CARC systems)
 - [GPU support docs](https://sylabs.io/guides/latest/user-guide/gpu.html)
-- Example for a TensorFlow runscript using Nvidia GPU:
+- For example, a TensorFlow runscript using NVIDIA GPU:
 
 ```bash
 singularity run --cleanenv --nv tf.sif
@@ -407,13 +451,13 @@ singularity run --cleanenv --nv tf.sif
 
 ---
 
-## Running containers with MPI
+## Running containers using MPI
 
 - Two approaches: hybrid vs. mount
 - Pros and cons for each approach
 - Less portable because it depends on MPI versions available on host system
 - [MPI support docs](https://sylabs.io/guides/latest/user-guide/mpi.html)
-- Example for an OpenMPI program:
+- For example, an OpenMPI program:
 
 ```bash
 srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif ./mpi_program
@@ -425,17 +469,7 @@ srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif ./mpi_program
 
 - Some useful environment variables can be set
 - Add to `~/.bashrc` to automatically set every time you log in
-- For example, change cache directory from `/home1` to `/scratch1`:
-
-```bash
-export SINGULARITY_CACHEDIR=/scratch1/<username>/.singularity
-```
-
-- For example, add certain bind paths to every container:
-
-```bash
-export SINGULARITY_BIND=/scratch1/<username>,/project/<project_id>
-```
+- See full list [here](https://docs.sylabs.io/guides/latest/user-guide/appendix.html#singularityce-s-environment-variables)
 
 ---
 
@@ -480,8 +514,8 @@ singularity help run
 - [Singularity website](https://sylabs.io/singularity)
 - [Singularity documentation](https://sylabs.io/guides/master/user-guide/)
 - [Singularity tutorial](https://singularity-tutorial.github.io/)
-- [Singularity Remote Builder](https://cloud.sylabs.io/builder)
 - [Singularity Cloud Library](https://cloud.sylabs.io/library)
+- [Singularity Remote Builder](https://cloud.sylabs.io/builder)
 - [Docker Hub](https://hub.docker.com/)
 - [BioContainers](https://biocontainers.pro)
 - [Dockstore](https://www.dockstore.org/)
