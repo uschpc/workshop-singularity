@@ -15,15 +15,18 @@ Learning objectives:
 
 ### Additional resources
 
-- [Using Singularity on CARC Systems](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
+- [Using Singularity on CARC systems](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
 - [CARC Singularity template definition files](https://github.com/uschpc/singularities)
 - [Singularity website](https://sylabs.io/singularity/)
 - [Singularity documentation](https://sylabs.io/guides/latest/user-guide/)
 - [Singularity tutorial](https://singularity-tutorial.github.io/)
-- [Singularity Cloud Library](https://cloud.sylabs.io/library)
 - [Singularity Remote Builder](https://cloud.sylabs.io/builder)
+
+Container registries:
+
+- [Singularity Cloud Library](https://cloud.sylabs.io/library)
 - [Docker Hub](https://hub.docker.com/)
 - [BioContainers](https://biocontainers.pro)
 - [Dockstore](https://dockstore.org/)
-- [Intel oneContainer Portal](https://www.intel.com/content/www/us/en/developer/tools/containers/overview.html)  
+- [Intel oneContainer Portal](https://www.intel.com/content/www/us/en/developer/tools/containers/overview.html)
 - [NVIDIA GPU Cloud Catalog](https://ngc.nvidia.com/catalog)
