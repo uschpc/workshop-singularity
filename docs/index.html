@@ -15,7 +15,7 @@ class: left, top, title-slide
 
 ### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2023-02-03
+### Last updated on 2023-03-03
 
 ---
 
@@ -128,7 +128,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 - Convert Docker images to Singularity images to run on HPC systems
 - Ensure reproducible software environments
 - Ensure the same software stack is used among a research group
-- Ensure the same software stack is used across Linux systems (e.g., any HPC center)
+- Ensure the same software stack is used across Linux systems (e.g., any HPC center or cloud computing service)
 - Use older or development versions of software (not available in modules)
 - Use proprietary software (typically distributed as binaries) that depends on other software not available on host system
 
@@ -381,9 +381,9 @@ singularity run rstan.sif
 
 ---
 
-## Filesystem within containers
+## File system within containers
 
-- Unique filesystem within a container
+- Unique file system within a container
   - `/bin`
   - `/lib`
   - `/usr`
@@ -443,10 +443,10 @@ singularity exec --no-home --bind $PWD rstan.sif Rscript script.R
 - Run `nvidia-smi` on NVIDIA GPU node to see current driver version and compatibility
 - Use `--rocm` option to access AMD ROCm GPUs (none on CARC systems)
 - [GPU support docs](https://sylabs.io/guides/latest/user-guide/gpu.html)
-- For example, a TensorFlow runscript using NVIDIA GPU:
+- For example, a PyTorch script using NVIDIA GPU:
 
 ```bash
-singularity run --cleanenv --nv tf.sif
+singularity exec --nv --no-home --bind $PWD pytorch.sif python script.py
 ```
 
 ---
@@ -493,6 +493,27 @@ singularity exec --cleanenv --no-home --bind $PWD rstan.sif Rscript script.R
 
 ---
 
+## Example Slurm job script using GPU
+
+```bash
+#!/bin/bash
+
+#SBATCH --account=<project_id>
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:v100:1
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16GB
+#SBATCH --time=1:00:00
+
+module purge
+
+singularity exec --nv --cleanenv --no-home --bind $PWD pytorch.sif python script.py
+```
+
+---
+
 ## Singularity documentation
 
 - [Official docs](https://sylabs.io/guides/latest/user-guide/)  
@@ -514,8 +535,11 @@ singularity help run
 - [Singularity website](https://sylabs.io/singularity)
 - [Singularity documentation](https://sylabs.io/guides/master/user-guide/)
 - [Singularity tutorial](https://singularity-tutorial.github.io/)
-- [Singularity Cloud Library](https://cloud.sylabs.io/library)
 - [Singularity Remote Builder](https://cloud.sylabs.io/builder)
+
+Container registries:
+
+- [Singularity Cloud Library](https://cloud.sylabs.io/library)
 - [Docker Hub](https://hub.docker.com/)
 - [BioContainers](https://biocontainers.pro)
 - [Dockstore](https://www.dockstore.org/)
@@ -526,7 +550,7 @@ singularity help run
 
 ## CARC support
 
-- [Using Singularity on CARC Systems](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
+- [Using Singularity on CARC HPC clusters](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
 - [CARC Singularity template definition files](https://github.com/uschpc/singularities)
 - [Submit a support ticket](https://www.carc.usc.edu/user-information/ticket-submission)
 - [User Forum](https://hpc-discourse.usc.edu/)
@@ -542,7 +566,7 @@ singularity help run
 - Build a custom container image
     - Create a definition file
     - Use the Remote Builder to build the custom image
-    - Transfer the image to CARC systems
+    - Transfer the image to a CARC file system
 - Inspect a container image
 - Bind mount a `/project` directory to a container and list its files
 - Run a script or program through a container
