@@ -12,10 +12,11 @@ Learning objectives:
 - Describe use cases for containers
 - Pull, build, and run a container image
 - Convert a Docker image to a Singularity image
+- Use Singularity on CARC HPC clusters
 
 ### Additional resources
 
-- [Using Singularity on CARC systems](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
+- [Using Singularity on CARC HPC clusters](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
 - [CARC Singularity template definition files](https://github.com/uschpc/singularities)
 - [Singularity website](https://sylabs.io/singularity/)
 - [Singularity documentation](https://sylabs.io/guides/latest/user-guide/)
