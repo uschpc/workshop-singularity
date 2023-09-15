@@ -13,16 +13,18 @@ class: left, top, title-slide
 
 # Software Containers with Singularity
 
+<img src="singularityce-logo.webp" height="200" />
+
 ### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2023-06-05
+### Last updated on 2023-09-15
 
 ---
 
 ## Outline
 
 1. Overview of software containers
-2. Getting pre-built container images
+2. Downloading pre-built container images
 3. Building custom container images
 4. Running containers
 
@@ -61,7 +63,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 ## Some terminology
 
-- **Container image** &mdash; executable file saved on disk (immutable blueprint)
+- **Container image** &mdash; executable file saved on storage drive (immutable blueprint)
 - **Container** &mdash; running instance of a container image
 - **Container engine** &mdash; application that builds and runs container images
 - **Host system** &mdash; system that runs the container engine
@@ -155,9 +157,9 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 ---
 
-## Getting and running images
+## Obtaining and running images
 
-- Getting images
+- Obtaining images
   - Pull pre-existing images from container registries
   - Download images from software websites
   - Build your own custom image
@@ -173,7 +175,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 - [Singularity Cloud Library](https://cloud.sylabs.io/library)
 
 ```bash
-singularity pull library://ubuntu:latest
+singularity pull library://debian:latest
 ```
 
 - [Docker Hub](https://hub.docker.com/)
