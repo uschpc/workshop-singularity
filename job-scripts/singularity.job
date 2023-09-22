@@ -10,4 +10,4 @@
 
 module purge
 
-singularity exec --cleanenv --no-home --bind $PWD rstan.sif Rscript script.R
+singularity exec --cleanenv --no-home --bind $PWD python.sif python script.py
