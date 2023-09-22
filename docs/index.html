@@ -17,24 +17,44 @@ class: left, top, title-slide
 
 ### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2023-09-15
+### Last updated on 2023-09-22
 
 ---
 
 ## Outline
 
 1. Overview of software containers
-2. Downloading pre-built container images
-3. Building custom container images
-4. Running containers
+2. Obtaining container images (downloading or building)
+3. Running containers
+
+---
+
+## Some terminology
+
+- **Container image** &mdash; executable file saved to storage (immutable blueprint)
+- **Container** &mdash; running instance of a container image
+- **Container engine** &mdash; application that builds and runs container images
+- **Host system** &mdash; system that runs the container engine
+- **Container registry** &mdash; catalog of container images
 
 ---
 
 ## What is a software container?
 
-- A software environment that bundles a main application and all its dependencies
+- A software environment that bundles one or more applications and all their dependencies
 - OS-level virtualization with process-level isolation on host system
 - Provides a custom user space separate from host system
+
+```bash
+Container = Operating system + Libraries + Applications
+```
+
+For example:
+
+```bash
+Container for R = Debian + libcurl,libpng,libopenblas,etc. + R + R packages
+```
+
 - Different from a virtual machine
   - Containers have direct access to the host kernel
   - Virtual machines have indirect access (performance penalty)
@@ -61,16 +81,6 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 ---
 
-## Some terminology
-
-- **Container image** &mdash; executable file saved on storage drive (immutable blueprint)
-- **Container** &mdash; running instance of a container image
-- **Container engine** &mdash; application that builds and runs container images
-- **Host system** &mdash; system that runs the container engine
-- **Container registry** &mdash; catalog of container images
-
----
-
 ## Diverse container ecosystem
 
 - Container image formats
@@ -93,10 +103,11 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 - Docker
   - Designed for running persistent services (e.g., web apps)
-  - Requires superuser privileges to run container images
+  - Requires superuser privileges to build and run container images
 - Singularity
   - Designed for running HPC workloads
   - Does not require superuser privileges to run container images
+  - But does require superuser privileges to build container images
 - Superuser privileges restricted to system admins on shared HPC systems
 - Both adhere to OCI image format standard
   - Can convert images from Docker to Singularity format
@@ -107,18 +118,18 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 ## Singularity containers
 
 - A container engine designed for HPC and shared HPC systems running Linux
-- Originally developed at LBNL (spinoff firm Sylabs with open-core model)
+- Originally developed at LBNL
+- Spinoff firm [Sylabs](https://sylabs.io/) with open-core model
+  - SingularityCE (community edition)
+  - SingularityPRO (proprietary edition)
 - Can be fully isolated from or integrated with host system
-  - Defaults to integration
+  - Defaults to some integration (e.g., mounting home directory)
   - Useful for parallel file systems, GPUs, high-speed networks
-- 2021 split in developer community
-  - SingularityCE (from Sylabs)
-  - Apptainer (project within Linux Foundation)
 - Most popular container engine for HPC
 - Alternatives for HPC
-  - Sarus
-  - Charliecloud
-  - Shifter
+  - [Sarus](https://sarus.readthedocs.io/en/stable/index.html)
+  - [Charliecloud](https://hpc.github.io/charliecloud/)
+  - [Shifter](https://shifter.readthedocs.io/en/latest/)
 
 ---
 
@@ -126,17 +137,16 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 - Install anything you want (based on any Linux OS)
 - Ease installation issues by using pre-built container images
-- If developer, bundle complex software stacks for easier distribution
-- Convert Docker images to Singularity images to run on HPC systems
 - Ensure reproducible software environments
 - Ensure the same software stack is used among a research group
 - Ensure the same software stack is used across Linux systems (e.g., any HPC center or cloud computing service)
-- Use older or development versions of software (not available in modules)
+- Use older or development versions of software (not available in software modules)
 - Use proprietary software (typically distributed as binaries) that depends on other software not available on host system
+- Convert Docker images to Singularity images to run on HPC systems
 
 ---
 
-## Some limitations of Singularity
+## Limitations of Singularity
 
 - Built for Linux systems
 - Portability depends on a few factors
@@ -152,20 +162,29 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 ## Singularity Image Format (SIF)
 
 - A single immutable, compressed, executable image file (`.sif`)
-- If you need to modify an image, you have to rebuild it or use as base image
+- If you need to modify an image, you have to rebuild it or use as base image for a new build
 - Adheres to OCI image format standard
 
 ---
 
-## Obtaining and running images
+## Accessing Singularity on CARC clusters
 
-- Obtaining images
-  - Pull pre-existing images from container registries
-  - Download images from software websites
-  - Build your own custom image
-- Running images
-  - Run images in interactive or batch modes
-  - Various options can be used to isolate/integrate with host system
+- Access directly
+- No software module needed
+
+```bash
+module purge
+
+singularity --version
+```
+
+---
+
+## Obtaining container images
+
+- Pull pre-existing images from container registries
+- Download images from software websites
+- Build your own custom image
 
 ---
 
@@ -181,7 +200,25 @@ singularity pull library://debian:latest
 - [Docker Hub](https://hub.docker.com/)
 
 ```bash
-singularity pull docker://clearlinux:latest
+singularity pull docker://python:3.11.5
+
+singularity pull docker://pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+```
+
+---
+
+## Limited /tmp space
+
+- Singularity uses /tmp space when pulling and building images
+- For large images, the /tmp space may be too small (limited to 1 GB on CARC nodes)
+- In these cases, use /dev/shm space instead on a compute node (limited by memory request)
+  - Request an interactive job with enough memory
+  - Change location of temporary files with environment variable
+
+```bash
+salloc -p debug -c 4 --mem=48G
+
+export TMPDIR=/dev/shm
 ```
 
 ---
@@ -189,19 +226,16 @@ singularity pull docker://clearlinux:latest
 ## Building custom images externally
 
 - Need to build outside of CARC systems (requires superuser privileges)
-- But need a Linux OS
-- Can build interactively in a sandbox mode (keep track of commands)
-- Better to build in batch mode with a definition file (reproducible recipe)
-- Best approach is to use the cloud-based [Singularity Remote Builder](https://cloud.sylabs.io/builder)
+  - But need a Linux OS
+- Can build interactively in sandbox mode (keep track of commands)
+- Will ultimately want to build in batch mode with a definition file (reproducible recipe)
+- Best option is to use the cloud-based, batch-mode [Singularity Remote Builder](https://cloud.sylabs.io/builder)
+  - May run slow on the free tier
 - Or use a virtual machine on your local computer (e.g., [Multipass](https://multipass.run/), [Virtual Box](https://www.virtualbox.org/))
-
----
-
-## Workflow considerations
-
+  - Install a Linux OS
+  - Then install SingularityCE
 - Could build container images using Docker, and then convert to SIF
 - Could also use Git-based CI/CD as part of build process
-- For reproducibility purposes, document and version control definition files
 
 ---
 
@@ -219,10 +253,11 @@ singularity pull docker://clearlinux:latest
 ## Definition files
 
 - Recipe for building a container image
-  - Start with a base Linux OS (e.g., Debian, Ubuntu, Rocky Linux, etc.)
+  - Start with a base Linux OS (e.g., Debian, AlmaLinux, etc.)
   - Or start with any existing container image from a registry
   - Then install software, add files, etc.
 - Similar to a Dockerfile, but different syntax
+- For reproducibility purposes, document and version control definition files
 - [CARC Singularity template definition files](https://github.com/uschpc/singularities)
 
 ---
@@ -283,13 +318,17 @@ From: clearlinux/r-base:latest
 ## Using Singularity Remote Builder
 
 - [Singularity Container Services](https://cloud.sylabs.io) by [Sylabs](https://www.sylabs.io)
-- Free service with up to 11 GB of storage
+- Free service with limits
+  - 11 GB of storage space
+  - 1000 minutes per month of build time
 - Log in with other account (GitHub, GitLab, Google, Microsoft)
 - Set up [access token](https://cloud.sylabs.io/tokens) on CARC systems
 - Use web interface to build
 - Or build remotely from the command line
 
 ```bash
+singularity remote login
+
 singularity build --remote rstan.sif rstan.def
 ```
 
@@ -316,19 +355,6 @@ singularity build --remote rstan.sif rstan.def
 
 ---
 
-## Limited /tmp space
-
-- Singularity uses /tmp space when pulling and building images
-- For large images, the /tmp space may be too small (limited to 1 GB on CARC systems)
-- In these cases, on a compute node, use /dev/shm space instead (limited by memory request)
-- Change location of temporary files with environment variable:
-
-```bash
-export TMPDIR=/dev/shm
-```
-
----
-
 ## Image cache
 
 - Images are cached when you pull them, which uses storage space
@@ -343,6 +369,7 @@ export SINGULARITY_CACHEDIR=/scratch1/<username>/singularity
 
 ```bash
 singularity cache list
+
 singularity cache clean
 ```
 
@@ -350,35 +377,71 @@ singularity cache clean
 
 ## Inspecting container images
 
+- See the definition file used to build the image:
+
 ```bash
-singularity inspect --deffile rstan.sif
+singularity inspect --deffile python.sif
+```
 
-singularity inspect --environment rstan.sif
+- See the environment variables set when running the container:
 
-singularity inspect --runscript rstan.sif
+```bash
+singularity inspect --environment python.sif
+```
+
+- See the runscript for the container:
+
+```bash
+singularity inspect --runscript python.sif
 ```
 
 ---
 
 ## Running containers
 
+- Containers can be run in interactive or batch modes
+- Various options can be used to isolate/integrate with host system
 - A container process is like any other Linux process
-- Just a different software environment
-- Three commands:
-  - `singularity shell` &mdash; for an interactive shell within the container
-  - `singularity exec` &mdash; for executing commands within the container
-  - `singularity run` &mdash; for running a pre-defined runscript within the container
+- Command for an interactive shell within the container:
+
+```bash
+singularity shell [options] <container>
+```
+
+- Command for batch executing commands within the container:
+
+```bash
+singularity exec [options] <container> <commands>
+```
+
+- Command for running a pre-defined runscript within the container:
+
+```bash
+singularity run [options] <container>
+```
 
 ---
 
-## Examples
+## Running containers examples
+
+- Run container in interactive mode:
 
 ```bash
-singularity shell rstan.sif
+singularity shell python.sif
+```
 
-singularity exec rstan.sif Rscript -e 'print("Hello world")'
+- Run container in batch mode:
 
-singularity run rstan.sif
+```bash
+singularity exec python.sif python -c 'print("Hello world")'
+
+singularity exec python.sif python script.py
+```
+
+- Run container's runscript:
+
+```bash
+singularity run python.sif
 ```
 
 ---
@@ -405,19 +468,21 @@ singularity run rstan.sif
 - For example, to add your current working directory and `/scratch1` directory:
 
 ```bash
-singularity exec --bind $PWD,/scratch1/<username> rstan.sif Rscript script.R
+singularity exec --bind $PWD,/scratch1/<username> python.sif python script.py
 ```
 
 - Can change name when binding if needed:
 
 ```bash
-singularity exec --bind $PWD:/mydir rstan.sif Rscript script.R
+singularity exec --bind $PWD:/mydir python.sif python script.py
 ```
 
-- Can use environment variable:
+- Can use environment variable instead:
 
 ```bash
 export SINGULARITY_BIND=/scratch1/<username>,/project/<project_id>
+
+singularity exec python.sif python script.py
 ```
 
 ---
@@ -425,16 +490,16 @@ export SINGULARITY_BIND=/scratch1/<username>,/project/<project_id>
 ## Other useful options
 
 - Often a good idea to use `--cleanenv` (or shorter `-e`)
+- Use `--containall` for maximum isolation from host system
 - May need to use `--no-home` to exclude `/home1` directory
   - e.g., for Python or R containers
   - Packages are installed in your home directory by default
   - Can lead to conflicts with software installed in container
 
 ```bash
-singularity exec --no-home --bind $PWD rstan.sif Rscript script.R
+singularity exec --cleanenv --no-home --bind $PWD python.sif python script.py
 ```
 
-- Use `--containall` for maximum isolation from host system
 
 ---
 
@@ -443,7 +508,7 @@ singularity exec --no-home --bind $PWD rstan.sif Rscript script.R
 - Containers need to access host GPU driver
 - Use `--nv` option to access NVIDIA GPUs
 - Run `nvidia-smi` on NVIDIA GPU node to see current driver version and compatibility
-- Use `--rocm` option to access AMD ROCm GPUs (none on CARC systems)
+- Use `--rocm` option to access AMD ROCm GPUs (none on CARC clusters)
 - [GPU support docs](https://sylabs.io/guides/latest/user-guide/gpu.html)
 - For example, a PyTorch script using NVIDIA GPU:
 
@@ -490,7 +555,7 @@ srun --mpi=pmix_v2 -n $SLURM_NTASKS singularity exec openmpi.sif ./mpi_program
 
 module purge
 
-singularity exec --cleanenv --no-home --bind $PWD rstan.sif Rscript script.R
+singularity exec --cleanenv --no-home --bind $PWD python.sif python script.py
 ```
 
 ---
@@ -519,6 +584,7 @@ singularity exec --nv --cleanenv --no-home --bind $PWD pytorch.sif python script
 ## Singularity documentation
 
 - [Official docs](https://sylabs.io/guides/latest/user-guide/)
+- Command-line help:
 
 ```bash
 singularity help
@@ -536,7 +602,7 @@ singularity help run
 
 - [Singularity website](https://sylabs.io/singularity)
 - [Singularity documentation](https://sylabs.io/guides/master/user-guide/)
-- [Singularity tutorial](https://singularity-tutorial.github.io/)
+- [Singularity tutorial](https://sylabs.github.io/singularity101/)
 - [Singularity Remote Builder](https://cloud.sylabs.io/builder)
 
 Container registries:
