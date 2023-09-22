@@ -20,7 +20,7 @@ Learning objectives:
 - [CARC Singularity template definition files](https://github.com/uschpc/singularities)
 - [Singularity website](https://sylabs.io/singularity/)
 - [Singularity documentation](https://sylabs.io/guides/latest/user-guide/)
-- [Singularity tutorial](https://singularity-tutorial.github.io/)
+- [Singularity tutorial](https://sylabs.github.io/singularity101/)
 - [Singularity Remote Builder](https://cloud.sylabs.io/builder)
 
 Container registries:
