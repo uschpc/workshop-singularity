@@ -9,7 +9,7 @@
   <body>
     <textarea id="source">
 
-class: left, top, title-slide
+class: center, top, title-slide
 
 # Software Containers with Singularity
 
@@ -17,7 +17,7 @@ class: left, top, title-slide
 
 ### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2023-09-22
+#### Last updated on 2024-06-20
 
 ---
 
@@ -29,7 +29,7 @@ class: left, top, title-slide
 
 ---
 
-## Some terminology
+## First some terminology
 
 - **Container image** &mdash; executable file saved to storage (immutable blueprint)
 - **Container** &mdash; running instance of a container image
@@ -117,7 +117,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 ## Singularity containers
 
-- A container engine designed for HPC and shared HPC systems running Linux
+- A container engine designed for HPC systems running Linux
 - Originally developed at LBNL
 - Spinoff firm [Sylabs](https://sylabs.io/) with open-core model
   - SingularityCE (community edition)
@@ -127,6 +127,7 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
   - Useful for parallel file systems, GPUs, high-speed networks
 - Most popular container engine for HPC
 - Alternatives for HPC
+  - [Apptainer](https://apptainer.org/)
   - [Sarus](https://sarus.readthedocs.io/en/stable/index.html)
   - [Charliecloud](https://hpc.github.io/charliecloud/)
   - [Shifter](https://shifter.readthedocs.io/en/latest/)
@@ -148,14 +149,13 @@ Source: [Singularity Community and SingularityPRO on high-performance servers](h
 
 ## Limitations of Singularity
 
-- Built for Linux systems
+- Designed for Linux systems
 - Portability depends on a few factors
   - CPU architecture format (x86 vs. ARM)
   - Binary format (ELF)
   - Kernel, glibc, other API compatibility
 - Not always backward compatible (v2 vs. v3)
 - Need superuser privileges to build images
-- No build layer caches
 
 ---
 
@@ -191,6 +191,12 @@ singularity --version
 ## Pulling existing container images
 
 - Pull from container registries
+- Request a compute node first
+
+```bash
+salloc -p debug
+```
+
 - [Singularity Cloud Library](https://cloud.sylabs.io/library)
 
 ```bash
@@ -200,9 +206,9 @@ singularity pull library://debian:latest
 - [Docker Hub](https://hub.docker.com/)
 
 ```bash
-singularity pull docker://python:3.11.5
+singularity pull docker://python:3.11.9
 
-singularity pull docker://pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+singularity pull docker://pytorch/pytorch:2.3.1-cuda11.8-cudnn8-runtime
 ```
 
 ---
@@ -218,7 +224,7 @@ singularity pull docker://pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
 ```bash
 salloc -p debug -c 4 --mem=48G
 
-export TMPDIR=/dev/shm
+export SINGULARITY_TMPDIR=/dev/shm
 ```
 
 ---
@@ -244,7 +250,7 @@ export TMPDIR=/dev/shm
 1. Create a definition file
 2. Build image externally using the definition file
 3. If error occurs, modify definition file and rebuild (back to step 1)
-4. Transfer image file to CARC systems
+4. Transfer image file to CARC directory
 5. Test image
 6. If error occurs, modify definition file and rebuild (back to step 1)
 
@@ -253,7 +259,7 @@ export TMPDIR=/dev/shm
 ## Definition files
 
 - Recipe for building a container image
-  - Start with a base Linux OS (e.g., Debian, AlmaLinux, etc.)
+  - Start with a base Linux OS (e.g., Debian, Alpine, AlmaLinux, etc.)
   - Or start with any existing container image from a registry
   - Then install software, add files, etc.
 - Similar to a Dockerfile, but different syntax
@@ -322,7 +328,7 @@ From: clearlinux/r-base:latest
   - 11 GB of storage space
   - 1000 minutes per month of build time
 - Log in with other account (GitHub, GitLab, Google, Microsoft)
-- Set up [access token](https://cloud.sylabs.io/tokens) on CARC systems
+- Set up [access token](https://cloud.sylabs.io/tokens) for CARC clusters
 - Use web interface to build
 - Or build remotely from the command line
 
@@ -359,7 +365,7 @@ singularity build --remote rstan.sif rstan.def
 
 - Images are cached when you pull them, which uses storage space
 - By default, the cache is located at `~/.singularity/cache`
-- Change location of cache directory with environment variable:
+- Can change location of cache directory with environment variable:
 
 ```bash
 export SINGULARITY_CACHEDIR=/scratch1/<username>/singularity
@@ -510,7 +516,7 @@ singularity exec --cleanenv --no-home --bind $PWD python.sif python script.py
 - Run `nvidia-smi` on NVIDIA GPU node to see current driver version and compatibility
 - Use `--rocm` option to access AMD ROCm GPUs (none on CARC clusters)
 - [GPU support docs](https://sylabs.io/guides/latest/user-guide/gpu.html)
-- For example, a PyTorch script using NVIDIA GPU:
+- For example, a PyTorch script using an NVIDIA GPU:
 
 ```bash
 singularity exec --nv --no-home --bind $PWD pytorch.sif python script.py
