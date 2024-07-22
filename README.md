@@ -16,7 +16,6 @@ Learning objectives:
 
 ### Additional resources
 
-- [Using Singularity on CARC HPC clusters](https://www.carc.usc.edu/user-information/user-guides/software-and-programming/singularity)
 - [CARC Singularity template definition files](https://github.com/uschpc/singularities)
 - [Singularity website](https://sylabs.io/singularity/)
 - [Singularity documentation](https://sylabs.io/guides/latest/user-guide/)
@@ -29,5 +28,4 @@ Container registries:
 - [Docker Hub](https://hub.docker.com/)
 - [BioContainers](https://biocontainers.pro)
 - [Dockstore](https://dockstore.org/)
-- [Intel oneContainer Portal](https://www.intel.com/content/www/us/en/developer/tools/containers/overview.html)
-- [NVIDIA GPU Cloud Catalog](https://ngc.nvidia.com/catalog)
+- [NVIDIA GPU Cloud Catalog](https://catalog.ngc.nvidia.com/containers)
